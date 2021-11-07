@@ -1,0 +1,431 @@
+---
+title: "athlete_events"
+author: "SAMIRA"
+date: "04/11/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+1. We have been provided with data from the Olympic Games held over the past 120 years. This paper provides a brief analysis of these events. Since the data was split into several files, first you need to create a custom function to combine all files into one for the convenience of further work. The function works correctly and is presented below
+
+```{r}
+library(plyr)
+olympic_func <- function(path, format) {
+   setwd = path
+   if (format == "csv") olympic_data1 <- ldply(list.files(), read.csv, header=TRUE) else{
+       if (format == "txt") olympic_data1 <- ldply(list.files(), read.txt, header = TRUE)
+       if (format == "xlsx") olympic_data1 <- ldply(list.files(), read.xlsx, header = TRUE)
+     }
+   
+}
+```
+
+Now it is possible to load data.
+
+```{r}
+olymp_data <- olympic_func(path = "/home/samira/Samira/athlete_events/athlete_events/", format = "csv")
+olymp_data1 <- olympic_func(path = "/home/samira/Samira/athlete_events/athlete_events/", format = "csv")
+```
+
+2. Let's pay attention to the data structure. Different types of data are presented here. There are both line data and numerical data. Each line contains information about a specific participant in the game: his name, gender, age, height, weight, team, country, games, year, season, city, sport, event, award
+```{r}
+View(olymp_data)
+```
+
+```{r}
+str(olympic_data)
+```
+
+Everything seems to be correct except for the country information. In some places it is written Russia-1, Russia-2, etc.
+You can try to delete non-letter characters.
+
+```{r}
+olymp_data$Team <- gsub('[0-9,-]+', '', olymp_data$Team)
+View(olymp_data)
+```
+
+
+```{r}
+#it is better to make weight integer value
+olympic_data$Weight <- as.integer(olympic_data$Weight)
+```
+
+Let's do a little computational analysis to get a closer look at the data.
+
+3. Let's find out the age of the youngest athletes of both sexes at the 1992 Olympics.
+
+```{r}
+youngest_man_92 <- olympic_data %>% filter(Year == 1992 & Sex == "M") %>% pull(Age)
+min(youngest_man_92, na.rm = TRUE)
+youngest_woman_92 <- olympic_data %>% filter(Year == 1992 & Sex == "F") %>% pull(Age)
+min(youngest_woman_92, na.rm = TRUE)
+```
+
+4. Let's calculate the mean and standard deviation of the Height variable for athletes of each gender.  
+
+```{r}
+mean(olympic_data$Height, na.rm = TRUE)
+sd(olympic_data$Height, na.rm = TRUE)
+```
+
+5. Now let's find out the Average value and standard deviation of the Height variable from tennis players at the 2000 Olympics.
+
+```{r}
+height_tennis_woman <- olympic_data %>% filter(Year == 2000 & Sex == "F") %>% pull(Height)
+round(mean(height_tennis_woman, na.rm = TRUE), 1)
+round(sd(height_tennis_woman, na.rm = TRUE), 1)
+```
+
+6. To find out which sport the heaviest athlete participated in in the 2006 Olympics, first find out the weight of the heaviest athlete in the 2006 Olympics. 
+
+```{r}
+heaviest_athlet <- subset(olympic_data, Year == 2006, select = Weight)
+max(heaviest_athlet, na.rm = TRUE)
+```
+He turned out to be 127 kg, now we can find out what kind of sport he participated in.
+
+```{r}
+weight_athlet <- olympic_data %>% filter(Year == 2006 &  Weight == 127) %>% pull(Sport)
+weight_athlet
+```
+
+7. It is interesting to look at the number of gold medals received by women from 1980 to 2010
+
+```{r}
+medals <- subset(olympic_data, Year == c(1980:2010) & Sex == "F" , select = Medal)
+woman_gold <- medals %>% filter(Medal == "Gold")
+length(rownames(woman_gold))
+```
+80 medals were received y women from 1980 to 2010.
+
+8. It is also possible to find out how many times a particular athlete participated in the Olympic Games in different years.
+
+```{r}
+sportsmen <- olympic_data %>% filter(Name == "John Aalberg")
+unique(sportsmen$Year)
+```
+So the athlete John Aalberg participated in different years: in 1992 and 1994.
+
+
+9. The least and most represented (by number of participants) age groups of athletes at the 2008 Olympic Games can be identified.
+
+```{r}
+members <- subset(olympic_data, Year == 2008, select = Age)
+
+members1 <- members %>% filter(Age == c(15:24))
+length(rownames(members1))
+
+members2 <- members %>% filter(Age == c(25:34))
+length(rownames(members2))
+
+members3 <- members %>% filter(Age == c(35:44))
+length(rownames(members3))
+
+members4 <- members %>% filter(Age == c(45:55))
+length(rownames(members4))
+
+
+```
+
+ So in age groups: [15-25) - 617 participants
+ [25-35) - 620 participants
+ [35-45) - 86 participants
+ [45-55] - 16 participant.
+ As we can see, the least number of participants in the group with age [45-55]
+
+
+
+10. It is interesting how the number of sports changed at the Olympics from 1994 to 2002
+
+```{r}
+type_sports_2002 <- olympic_data %>% filter(Year == 2002 ) %>% pull(Sport)
+type_sports_1994 <- olympic_data %>% filter(Year == 1994 ) %>% pull(Sport)
+length(unique(type_sports_2002)) - length(unique(type_sports_1994))
+```
+ So, in 2002, 3 new sports appeared. 
+ 
+ 
+11. Output for the winter and summer Olympiads separately the top 3 countries for each type of medal.
+ 
+```{r}
+winter_gold <- olympic_data %>% filter( Season == "Winter", Medal == "Gold" ) %>% pull(Team)
+winter_gold 
+
+winter_silver <- olympic_data %>% filter( Season == "Winter", Medal == "Silver" ) %>% pull(Team)
+winter_silver
+
+winter_bronze <- olympic_data %>% filter( Season == "Winter", Medal == "Bronze" ) %>% pull(Team)
+winter_bronze
+
+summer_gold <- olympic_data %>% filter( Season == "Summer", Medal == "Gold" ) %>% pull(Team)
+summer_gold
+
+summer_silver <- olympic_data %>% filter( Season == "Summer", Medal == "Silver" ) %>% pull(Team)
+summer_silver
+
+summer_bronze <- olympic_data %>% filter( Season == "Summer", Medal == "Bronze" ) %>% pull(Team)
+summer_bronze
+
+
+```
+
+TOP-3 Teams with Gold medals in winter season:
+
+```{r}
+winter_gold <- olympic_data %>% filter( Season == "Winter", Medal == "Gold" ) %>% pull(Team)
+winter_gold <- gsub('[0-9,-]+', '', winter_gold)
+tail(sort(table(winter_gold)),  3) # US, SU,Canada - gold actually we can summarize medals from SU and Russia and that will put the SU on the 1st place
+```
+But, actually, if we take a look on top-10 we can find Russia that is why we can summarize medals from SU and Russia and that will put the SU on the 1st place :)
+
+```{r}
+winter_gold <- olympic_data %>% filter( Season == "Winter", Medal == "Gold" ) %>% pull(Team)
+winter_gold <- gsub('[0-9,-]+', '', winter_gold)
+tail(sort(table(winter_gold)),  10)
+```
+
+TOP-3 Teams with Silver medals in winter season:
+
+```{r}
+winter_silver <- gsub('[0-9,-]+', '', winter_silver)
+tail(sort(table(winter_silver)),  3)
+
+```
+
+
+TOP-3 Teams with Bronze medals in winter season:
+
+```{r}
+winter_bronze <- gsub('[0-9,-]+', '', winter_bronze)
+tail(sort(table(winter_bronze)),  3)
+```
+
+
+TOP-3 Teams with Gold medals in summer season:
+```{r}
+summer_gold <- gsub('[0-9,-]+', '', summer_gold)
+tail(sort(table(summer_gold)),  3)
+```
+
+TOP-3 Teams with Silver medals in summer season:
+
+```{r}
+summer_silver <- gsub('[0-9,-]+', '', summer_silver)
+tail(sort(table(summer_silver)),  3)
+```
+
+TOP-3 Teams with Bronze medals in summer season:
+
+```{r}
+summer_bronze <- gsub('[0-9,-]+', '', summer_bronze)
+tail(sort(table(summer_bronze)),  3)
+```
+
+
+
+ 
+12. Standardizing a variable Height_z_scores and store the values of the Height variable in it after standardizing it.
+```{r} 
+olympic_data <- olympic_data %>% mutate(Height_z_scores = (scale(Height)))
+```
+
+But it was possible to create a variable and not add a column. Then it would be possible to count without NA values.
+
+```{r}
+Height_new <- na.omit(olympic_data$Height) 
+Height_z_scores_new <- scale(Height_new)
+mean(Height_z_scores_new)
+sd(Height_z_scores_new)
+```
+
+
+14. Let's compare how different the physical indicators such as weight, age, and height of men and women who participated in the Winter Olympics are.
+
+
+```{r}
+olymp_data_winter <- subset(olymp_data, Season == "Winter")
+View(olymp_data_winter)
+```
+
+
+```{r}
+olymp_data_winter <- olymp_data_winter %>% mutate(Sex = replace(Sex, Sex == "M", "1")) %>% 
+   mutate(Sex = replace(Sex, Sex == "F", "2"))
+olymp_data_winter$Sex <- as.factor(olymp_data_winter$Sex)
+str(olymp_data_winter)
+
+```
+```{r}
+df1 <- filter(olymp_data_winter, Sex %in% c(1,2))
+```
+
+```{r}
+Height_fem <- olymp_data_winter %>% filter(Sex == 2) %>% pull(Height)
+Height_male <- olymp_data_winter %>% filter(Sex == 1) %>% pull(Height)
+```
+
+Normality check
+
+```{r}
+qqPlot(Height_fem)
+qqPlot(Height_male)
+```
+We assume that the data is distributed normally.
+
+We checked the equality of variances using the Fisher test:
+```{r}
+var.test(Height_fem, Height_male)
+```
+
+
+The two-sample Welch t-test was used to test the significance of the differences between the means. differences in variances in 2 groups are statistically significant:
+
+```{r}
+t.test(Height_fem, Height_male, var.equal = FALSE)
+```
+t = -33.636, df = 195.34, p-value < 2.2e-16
+
+The resulting differences are statistically significant, and we can accept an alternative hypothesis, which says that in these two groups (the height of men and women), the average height is different.
+
+Let's see what result we would get if we used t-test without Welch's correction:
+```{r}
+t.test(Height_fem, Height_male, var.equal = TRUE)
+```
+t = -179.58, df = 40248, p-value < 2.2e-16
+
+In this case, the result does not change, and the difference is still statistically significant.
+
+To visualize the distributions, a Boxplot was built for the compared groups:
+
+```{r}
+ggplot(df1, aes((Sex), Height))+
+  geom_boxplot()+
+  xlab("Sex")+
+  ylab("Height")
+```
+
+And also a graph with confidence intervals and averages for both groups:
+
+```{r}
+ggplot(df1, aes(as.factor(Sex), Height))+
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width=0.1, size=0.1)+
+  stat_summary(fun = mean, geom = "point", size=1)+
+  theme_bw()+
+  xlab("Sex")+
+  ylab("Height")
+
+```
+
+Based on the resulting graph, it can also be concluded that the differences are statistically significant (the mean of 1 sample is not included in the confidence interval for the 2 mean and vice versa).
+
+
+A similar analysis can be done with other physical parameters: age and weight
+
+
+```{r}
+Weight_fem <- olymp_data_winter %>% filter(Sex == 2) %>% pull(Weight)
+Weight_male <- olymp_data_winter %>% filter(Sex == 1) %>% pull(Weight)
+```
+
+
+```{r}
+qqPlot(Weight_fem)
+qqPlot(Weight_male)
+```
+```{r}
+var.test(Weight_fem, Weight_male)
+```
+
+F = 0.46688, num df = 13333, denom df = 26208, p-value < 2.2e-16
+
+```{r}
+t.test(Weight_fem, Weight_male, var.equal = FALSE)
+```
+t = -187.85, df = 36296, p-value < 2.2e-16
+
+
+```{r}
+t.test(Weight_fem, Weight_male, var.equal = TRUE)
+```
+t =  -166.79, df = 39541, p-value < 2.2e-16
+
+
+
+```{r}
+ggplot(df1, aes((Sex), Weight))+
+  geom_boxplot()+
+  xlab("Sex")+
+  ylab("Weight")
+```
+
+
+```{r}
+ggplot(df1, aes(as.factor(Sex), Weight))+
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width=0.1, size=0.1)+
+  stat_summary(fun = mean, geom = "point", size=1)+
+  theme_bw()+
+  xlab("Sex")+
+  ylab("Weight")
+
+```
+
+Comparison of ages:
+
+```{r}
+Age_fem <- olymp_data_winter %>% filter(Sex == 2) %>% pull(Age)
+Age_male <- olymp_data_winter %>% filter(Sex == 1) %>% pull(Age)
+```
+
+```{r}
+qqPlot(Age_fem)
+qqPlot(Age_male)
+```
+
+```{r}
+var.test(Age_fem, Age_male)
+```
+
+F = 0.97635, num df = 15072, denom df = 33205, p-value = 0.08559
+
+The differences in variances in 2 groups are statistically insignificant:
+
+
+t-test without Welch's correction:
+
+```{r}
+t.test(Age_fem, Age_male, var.equal = TRUE)
+```
+t = -32.095, df = 48277, p-value < 2.2e-16
+
+
+
+```{r}
+ggplot(df1, aes(as.factor(Sex), Age))+
+  geom_boxplot()+
+  xlab("Sex")+
+  ylab("Age")
+```
+
+```{r}
+ggplot(df1, aes(as.factor(Sex), Age))+
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width=0.1, size=0.1)+
+  stat_summary(fun = mean, geom = "point", size=1)+
+  theme_bw()+
+  xlab("Sex")+
+  ylab("Age")
+
+```
+
+After conducting a statistical analysis, we can conclude that the average height and weight in men and women differ, which cannot be said about age.
+
+
+
