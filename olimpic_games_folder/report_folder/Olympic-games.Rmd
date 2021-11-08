@@ -32,13 +32,12 @@ olympic_func <- function(path, format) {
 Now it is possible to load data.
 
 ```{r}
-olymp_data <- olympic_func(path = "/home/samira/Samira/athlete_events/athlete_events/", format = "csv")
-olymp_data1 <- olympic_func(path = "/home/samira/Samira/athlete_events/athlete_events/", format = "csv")
+olympic_data <- olympic_func(path = "/home/samira/Samira/athlete_events/athlete_events/", format = "csv")
 ```
 
 2. Let's pay attention to the data structure. Different types of data are presented here. There are both line data and numerical data. Each line contains information about a specific participant in the game: his name, gender, age, height, weight, team, country, games, year, season, city, sport, event, award
 ```{r}
-View(olymp_data)
+View(olympic_data)
 ```
 
 ```{r}
@@ -49,8 +48,8 @@ Everything seems to be correct except for the country information. In some place
 You can try to delete non-letter characters.
 
 ```{r}
-olymp_data$Team <- gsub('[0-9,-]+', '', olymp_data$Team)
-View(olymp_data)
+olympic_data$Team <- gsub('[0-9,-]+', '', olympic_data$Team)
+View(olympic_data)
 ```
 
 
@@ -188,15 +187,14 @@ tail(sort(table(winter_gold)),  3) # US, SU,Canada - gold actually we can summar
 But, actually, if we take a look on top-10 we can find Russia that is why we can summarize medals from SU and Russia and that will put the SU on the 1st place :)
 
 ```{r}
-winter_gold <- olympic_data %>% filter( Season == "Winter", Medal == "Gold" ) %>% pull(Team)
-winter_gold <- gsub('[0-9,-]+', '', winter_gold)
+
 tail(sort(table(winter_gold)),  10)
 ```
 
 TOP-3 Teams with Silver medals in winter season:
 
 ```{r}
-winter_silver <- gsub('[0-9,-]+', '', winter_silver)
+
 tail(sort(table(winter_silver)),  3)
 
 ```
@@ -205,28 +203,28 @@ tail(sort(table(winter_silver)),  3)
 TOP-3 Teams with Bronze medals in winter season:
 
 ```{r}
-winter_bronze <- gsub('[0-9,-]+', '', winter_bronze)
+
 tail(sort(table(winter_bronze)),  3)
 ```
 
 
 TOP-3 Teams with Gold medals in summer season:
 ```{r}
-summer_gold <- gsub('[0-9,-]+', '', summer_gold)
+
 tail(sort(table(summer_gold)),  3)
 ```
 
 TOP-3 Teams with Silver medals in summer season:
 
 ```{r}
-summer_silver <- gsub('[0-9,-]+', '', summer_silver)
+
 tail(sort(table(summer_silver)),  3)
 ```
 
 TOP-3 Teams with Bronze medals in summer season:
 
 ```{r}
-summer_bronze <- gsub('[0-9,-]+', '', summer_bronze)
+
 tail(sort(table(summer_bronze)),  3)
 ```
 
